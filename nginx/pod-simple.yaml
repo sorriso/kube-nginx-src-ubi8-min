@@ -1,0 +1,88 @@
+# kubectl -n test-nginx exec -it pod-nginx-simple-5fb9c97f64-7627c -- /bin/sh
+# kubectl --namespace test-nginx logs pod-nginx-simple-5fb9c97f64-7627c
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-nginx-simple
+  namespace: test-nginx
+  labels:
+    app: pod-nginx-simple
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pod-nginx-simple
+  template:
+    metadata:
+      labels:
+        app: pod-nginx-simple
+    spec:
+      containers:
+
+      - name: pod-nginx-simple
+        image: l_nginx:latest
+        imagePullPolicy: Never
+
+        ports:
+
+          - containerPort: 4321
+            protocol: TCP
+
+        resources:
+
+          limits:
+            cpu: 100m
+            memory: 512Mi
+
+          requests:
+            cpu: 10m
+            memory: 128Mi
+
+#        readinessProbe:
+#
+#          exec:
+#            command: ["curl", "--silent", "http://localhost:4321/status"]
+#          failureThreshold: 2
+#          initialDelaySeconds: 4
+#          periodSeconds: 10
+#          successThreshold: 1
+#          timeoutSeconds: 5
+#
+#        livenessProbe:
+#
+#          tcpSocket:
+#            port: 4321
+#          failureThreshold: 6
+#          initialDelaySeconds: 8
+#          periodSeconds: 30
+#          successThreshold: 1
+#          timeoutSeconds: 5
+
+        volumeMounts:
+
+          - name: nginx-configuration
+            mountPath: /etc/nginx/nginx.conf
+            subPath: NGINX_CONF_KEY
+
+          - name: application-configuration
+            mountPath: /etc/nginx/nginx.d/app.conf
+            subPath: APP_CONF_KEY
+
+          - name: application-html
+            mountPath: /usr/share/nginx/html/index.html
+            subPath: APP_HTML_KEY
+
+      volumes:
+
+        - name: nginx-configuration
+          secret:
+            secretName: test-nginx-secret
+
+        - name: application-configuration
+          secret:
+            secretName: test-nginx-secret
+
+        - name: application-html
+          secret:
+            secretName: test-nginx-secret
